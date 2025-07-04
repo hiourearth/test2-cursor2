@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { MovieWithStats } from '../types/supabase'
+import { useAuth } from '../hooks/useAuth'
 import MovieCard from '../components/MovieCard'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -8,6 +10,8 @@ const HomePage = () => {
   const [movies, setMovies] = useState<MovieWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  
+  const { isAdmin } = useAuth()
 
   useEffect(() => {
     loadMovies()
@@ -56,6 +60,16 @@ const HomePage = () => {
         <p className="text-gray-600">
           发现并评价最新最热门的电影
         </p>
+                 {isAdmin && (
+           <div className="mt-4">
+             <Link
+               to="/admin"
+               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+             >
+               🛠️ 进入管理后台
+             </Link>
+           </div>
+         )}
       </div>
 
       {movies.length === 0 ? (
@@ -65,7 +79,10 @@ const HomePage = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           {movies.map((movie) => (
-            <MovieCard key={movie.id} movie={movie} />
+            <MovieCard 
+              key={movie.id} 
+              movie={movie}
+            />
           ))}
         </div>
       )}

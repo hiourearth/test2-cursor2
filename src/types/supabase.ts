@@ -78,6 +78,27 @@ export type Database = {
           },
         ]
       }
+      users: {
+        Row: {
+          auth_user_id: string
+          created_at: string | null
+          id: string
+          role: string
+        }
+        Insert: {
+          auth_user_id: string
+          created_at?: string | null
+          id?: string
+          role?: string
+        }
+        Update: {
+          auth_user_id?: string
+          created_at?: string | null
+          id?: string
+          role?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       movie_stats: {
@@ -102,6 +123,7 @@ export type Database = {
           updated_at: string | null
           user_email: string | null
           user_id: string | null
+          user_role: string | null
         }
         Relationships: [
           {
@@ -120,9 +142,26 @@ export type Database = {
           },
         ]
       }
+      user_profile: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string | null
+          email: string | null
+          id: string | null
+          role: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
@@ -138,4 +177,8 @@ export type MovieWithStats = Database['public']['Views']['movie_stats']['Row']
 export type Rating = Database['public']['Tables']['ratings']['Row']
 export type RatingInsert = Database['public']['Tables']['ratings']['Insert']
 export type RatingUpdate = Database['public']['Tables']['ratings']['Update']
-export type RatingWithUser = Database['public']['Views']['rating_with_user']['Row'] 
+export type RatingWithUser = Database['public']['Views']['rating_with_user']['Row']
+export type User = Database['public']['Tables']['users']['Row']
+export type UserInsert = Database['public']['Tables']['users']['Insert']
+export type UserUpdate = Database['public']['Tables']['users']['Update']
+export type UserProfile = Database['public']['Views']['user_profile']['Row'] 

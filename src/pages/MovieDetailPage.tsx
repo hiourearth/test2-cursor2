@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { MovieWithStats, RatingWithUser } from '../types/supabase'
+import { useAuth } from '../hooks/useAuth'
 import RatingForm from '../components/RatingForm'
 import LoadingSpinner from '../components/LoadingSpinner'
 
@@ -11,6 +12,8 @@ const MovieDetailPage = () => {
   const [ratings, setRatings] = useState<RatingWithUser[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  
+  const { isAdmin } = useAuth()
 
   useEffect(() => {
     if (id) {
@@ -60,6 +63,27 @@ const MovieDetailPage = () => {
     loadRatings()
   }
 
+  const handleDeleteRating = async (ratingId: string) => {
+    if (!confirm('确定要删除这个评分吗？')) {
+      return
+    }
+
+    try {
+      const { error } = await supabase
+        .from('ratings')
+        .delete()
+        .eq('id', ratingId)
+
+      if (error) throw error
+      
+      loadMovieDetail()
+      loadRatings()
+    } catch (error: any) {
+      console.error('删除评分失败:', error)
+      alert('删除评分失败，请重试')
+    }
+  }
+
   if (loading) {
     return <LoadingSpinner />
   }
@@ -98,9 +122,16 @@ const MovieDetailPage = () => {
           {/* 电影封面 */}
           <div className="md:w-1/3">
             <img
-              src={movie.cover_image_url || '/placeholder-movie.jpg'}
+              src={movie.cover_image_url || '/placeholder-movie.svg'}
               alt={movie.title || ''}
               className="w-full h-96 md:h-full object-cover"
+              referrerPolicy="no-referrer"
+                              onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  if (target.src !== '/placeholder-movie.svg') {
+                    target.src = '/placeholder-movie.svg';
+                  }
+                }}
             />
           </div>
           
@@ -171,14 +202,29 @@ const MovieDetailPage = () => {
                           {rating.rating || 0} 分
                         </span>
                       </div>
-                      <span className="text-gray-500 text-sm">
-                        {new Date(rating.created_at!).toLocaleDateString()}
-                      </span>
+                      <div className="flex items-center space-x-2">
+                        <span className="text-gray-500 text-sm">
+                          {new Date(rating.created_at!).toLocaleDateString()}
+                        </span>
+                        {/* 管理员删除按钮 */}
+                        {isAdmin && (
+                          <button
+                            onClick={() => handleDeleteRating(rating.id!)}
+                            className="text-red-500 hover:text-red-700 text-sm"
+                            title="删除评分"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    {/* 显示用户邮箱 */}
-                    <div className="flex items-center">
+                    {/* 显示用户邮箱和角色 */}
+                    <div className="flex items-center justify-between">
                       <span className="text-gray-500 text-sm">
                         👤 {rating.user_email || '匿名用户'}
+                        {rating.user_role === 'admin' && (
+                          <span className="ml-2 text-blue-600 text-xs">🛠️ 管理员</span>
+                        )}
                       </span>
                     </div>
                   </div>

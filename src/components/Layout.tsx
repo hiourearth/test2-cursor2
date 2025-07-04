@@ -2,7 +2,7 @@ import { Outlet, Link } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 
 const Layout = () => {
-  const { user, signOut } = useAuth()
+  const { user, userProfile, isAdmin, signOut } = useAuth()
 
   const handleSignOut = async () => {
     await signOut()
@@ -22,7 +22,28 @@ const Layout = () => {
             <div className="flex items-center space-x-4">
               {user ? (
                 <>
-                  <span className="text-gray-600">欢迎，{user.email}</span>
+                  {isAdmin && (
+                    <Link
+                      to="/admin"
+                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      🛠️ 管理后台
+                    </Link>
+                  )}
+                  <div className="text-right">
+                    <div className="text-gray-600">
+                      欢迎，{user.email}
+                    </div>
+                    {userProfile && (
+                      <div className="text-xs text-gray-500">
+                        {isAdmin ? (
+                          <span className="text-blue-600 font-medium">🛠️ 管理员</span>
+                        ) : (
+                          <span>普通用户</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={handleSignOut}
                     className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"

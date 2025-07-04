@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../hooks/useAuth'
 import { useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true)
@@ -8,6 +9,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [resetLoading, setResetLoading] = useState(false)
+  const [resetMessage, setResetMessage] = useState('')
   
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
@@ -16,12 +19,18 @@ const LoginPage = () => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setResetMessage('')
 
     try {
       if (isLogin) {
-        const { error } = await signIn(email, password)
+        const { data, error } = await signIn(email, password)
         if (error) throw error
-        navigate('/')
+        
+        // 登录成功后，让App.tsx的路由逻辑处理跳转
+        // 等待一下确保状态更新
+        setTimeout(() => {
+          console.log('登录成功，等待角色状态更新...')
+        }, 100)
       } else {
         const { error } = await signUp(email, password)
         if (error) throw error
@@ -31,6 +40,31 @@ const LoginPage = () => {
       setError(error.message || '操作失败')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleResetPassword = async () => {
+    if (!email) {
+      setError('请先输入邮箱地址')
+      return
+    }
+
+    setResetLoading(true)
+    setError('')
+    setResetMessage('')
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
+      
+      if (error) throw error
+      
+      setResetMessage('密码重置邮件已发送！请检查您的邮箱。')
+    } catch (error: any) {
+      setError(error.message || '发送重置邮件失败')
+    } finally {
+      setResetLoading(false)
     }
   }
 
@@ -57,6 +91,12 @@ const LoginPage = () => {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
               {error}
+            </div>
+          )}
+          
+          {resetMessage && (
+            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded">
+              {resetMessage}
             </div>
           )}
           
@@ -105,6 +145,20 @@ const LoginPage = () => {
               {loading ? '处理中...' : isLogin ? '登录' : '注册'}
             </button>
           </div>
+          
+          {/* 密码重置功能 */}
+          {isLogin && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={handleResetPassword}
+                disabled={resetLoading}
+                className="text-sm text-blue-600 hover:text-blue-500 disabled:opacity-50"
+              >
+                {resetLoading ? '发送中...' : '忘记密码？点击重置'}
+              </button>
+            </div>
+          )}
         </form>
       </div>
     </div>

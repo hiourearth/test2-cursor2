@@ -12,9 +12,16 @@ const MovieCard = ({ movie }: MovieCardProps) => {
         {/* 电影封面 */}
         <div className="aspect-w-3 aspect-h-4">
           <img
-            src={movie.cover_image_url || '/placeholder-movie.jpg'}
+            src={movie.cover_image_url || '/placeholder-movie.svg'}
             alt={movie.title || ''}
             className="w-full h-64 object-cover"
+            referrerPolicy="no-referrer"
+                          onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== '/placeholder-movie.svg') {
+                  target.src = '/placeholder-movie.svg';
+                }
+              }}
           />
         </div>
         
